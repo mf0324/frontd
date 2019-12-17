@@ -17,7 +17,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	_ "net/http/pprof"
@@ -62,13 +61,13 @@ func main() {
 
 	_BackendAddrCache.Store(make(backendAddrMap))
 
-	var lim syscall.Rlimit
-	syscall.Getrlimit(syscall.RLIMIT_NOFILE, &lim)
-	if lim.Cur < _MaxOpenfile || lim.Max < _MaxOpenfile {
-		lim.Cur = _MaxOpenfile
-		lim.Max = _MaxOpenfile
-		syscall.Setrlimit(syscall.RLIMIT_NOFILE, &lim)
-	}
+	// var lim syscall.Rlimit
+	// syscall.Getrlimit(syscall.RLIMIT_NOFILE, &lim)
+	// if lim.Cur < _MaxOpenfile || lim.Max < _MaxOpenfile {
+	// 	lim.Cur = _MaxOpenfile
+	// 	lim.Max = _MaxOpenfile
+	// 	syscall.Setrlimit(syscall.RLIMIT_NOFILE, &lim)
+	// }
 
 	_SecretPassphase = []byte(os.Getenv("SECRET"))
 
@@ -177,6 +176,7 @@ func handleConn(c net.Conn) {
 			}
 		}
 
+		fmt.Print(cipherAddr)
 		// base64 decode
 		dbuf := make([]byte, base64.StdEncoding.DecodedLen(len(cipherAddr)))
 		n, err := base64.StdEncoding.Decode(dbuf, cipherAddr)
@@ -253,6 +253,7 @@ func handleHTTPHdr(rdr *bufio.Reader, c net.Conn, header *bytes.Buffer) (addr []
 	var cipherAddr []byte
 	for {
 		line, isPrefix, err := rdr.ReadLine()
+		fmt.Println(string(line))
 		if err != nil || isPrefix {
 			log.Println(err)
 			writeErrCode(c, []byte("4107"), true)
